@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HomAIker — AI Interior Design CoPilot</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root { --gold: #C9A253; --gold-dim: rgba(201,162,83,0.18); --bg: #080808; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: #f0ede8; }
+    html { scroll-behavior: smooth; }
+    .serif { font-family: 'Playfair Display', serif; }
+
+    /* ── Nav ── */
+    nav { position: sticky; top: 0; z-index: 50; background: rgba(8,8,8,0.92); backdrop-filter: blur(14px); border-bottom: 1px solid var(--gold-dim); }
+    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 28px; height: 64px; display: flex; align-items: center; gap: 32px; }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.45rem; font-weight: 800; color: #f0ede8; text-decoration: none; letter-spacing: -0.02em; }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; align-items: center; gap: 28px; margin-left: auto; }
+    .nav-link { color: #8a7f70; font-size: 0.875rem; text-decoration: none; transition: color 0.2s; }
+    .nav-link:hover { color: var(--gold); }
+    .nav-cta { background: linear-gradient(135deg, #9A7832, var(--gold)); color: #080808; font-weight: 700; font-size: 0.875rem; padding: 8px 22px; border-radius: 10px; text-decoration: none; transition: opacity 0.2s; }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ── Hero ── */
+    .hero { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 64px); }
+    .hero-left { display: flex; flex-direction: column; justify-content: center; padding: 80px 64px 80px 80px; background: #080808; }
+    .hero-right { position: relative; overflow: hidden; background-image: url('/static/hero-interior.png'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; }
+    .hero-right::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, rgba(8,8,8,0.25) 0%, rgba(0,0,0,0.15) 100%); }
+    .hero-tag { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.15em; color: var(--gold); text-transform: uppercase; margin-bottom: 20px; }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: clamp(3.2rem, 5vw, 5.5rem); font-weight: 800; line-height: 1.04; color: #f0ede8; margin-bottom: 22px; }
+    .hero-title span { color: var(--gold); }
+    .hero-sub1 { font-size: clamp(1.05rem, 1.8vw, 1.35rem); font-weight: 500; color: #f0ede8; line-height: 1.4; margin-bottom: 10px; }
+    .hero-sub1 em { font-style: normal; color: var(--gold); text-decoration: underline; text-decoration-color: #c0392b; text-underline-offset: 4px; }
+    .hero-sub2 { font-size: 0.95rem; color: #7a7060; line-height: 1.55; margin-bottom: 48px; }
+    .hero-btn { display: inline-flex; align-items: center; gap: 9px; background: linear-gradient(135deg, #9A7832, var(--gold)); color: #080808; font-weight: 700; font-size: 1rem; padding: 14px 36px; border-radius: 12px; text-decoration: none; width: fit-content; transition: transform 0.2s, opacity 0.2s; margin-bottom: 52px; }
+    .hero-btn:hover { transform: scale(1.02); opacity: 0.92; }
+    .hero-byline { border-top: 1px solid var(--gold-dim); padding-top: 28px; }
+    .hero-byline p { font-size: 0.85rem; color: #5a5040; margin-bottom: 6px; }
+    .hero-byline strong { font-size: 0.9rem; color: #9a9080; font-weight: 400; }
+
+    /* ── Hero visual ── */
+    .hero-visual { position: relative; z-index: 1; text-align: center; padding: 40px; }
+    .hero-ring { width: 130px; height: 130px; border-radius: 50%; background: rgba(201,162,83,0.08); border: 1.5px solid rgba(201,162,83,0.28); display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; }
+    .hero-orb1 { position: absolute; top: -70px; right: -70px; width: 340px; height: 340px; border-radius: 50%; border: 1px solid rgba(201,162,83,0.06); pointer-events: none; }
+    .hero-orb2 { position: absolute; bottom: -50px; left: -50px; width: 220px; height: 220px; border-radius: 50%; border: 1px solid rgba(201,162,83,0.06); pointer-events: none; }
+
+    /* ── Section shared ── */
+    .section-inner { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.5vw, 2.9rem); font-weight: 700; color: #f0ede8; margin-bottom: 14px; }
+    .section-sub { font-size: 0.95rem; color: #6a6050; }
+    .gold-rule { width: 60px; height: 2px; background: linear-gradient(to right, transparent, var(--gold), transparent); margin: 24px auto 0; }
+
+    /* ── Problem ── */
+    #problem { padding: 100px 28px; background: linear-gradient(180deg, #0a0a0a 0%, #080808 100%); border-top: 1px solid var(--gold-dim); }
+    .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .card { background: rgba(255,255,255,0.025); border: 1px solid var(--gold-dim); border-radius: 18px; padding: 36px; }
+    .card h3 { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: #f0ede8; margin-bottom: 14px; }
+    .card p { font-size: 0.9rem; color: #8a8070; line-height: 1.65; margin-bottom: 20px; }
+    .card-impact { border-top: 1px solid var(--gold-dim); padding-top: 16px; font-size: 0.85rem; font-weight: 600; color: var(--gold); line-height: 1.5; }
+
+    /* ── Target Users ── */
+    #users { padding: 100px 28px; background: #080808; border-top: 1px solid var(--gold-dim); }
+    .users-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .user-card { background: rgba(255,255,255,0.02); border: 1px solid var(--gold-dim); border-radius: 16px; padding: 32px; }
+    .user-icon { margin-bottom: 18px; }
+    .user-card h3 { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: #f0ede8; margin-bottom: 4px; }
+    .user-card .subtitle { font-size: 0.78rem; font-style: italic; color: #5a5040; margin-bottom: 14px; }
+    .user-card p { font-size: 0.88rem; color: #8a8070; line-height: 1.6; margin-bottom: 16px; }
+    .user-card .stat { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
+
+    /* ── Product ── */
+    #product { padding: 100px 28px; background: linear-gradient(180deg, #080808 0%, #0a0805 100%); border-top: 1px solid var(--gold-dim); }
+    .styles-active { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-bottom: 56px; }
+    .style-card-active { background: rgba(201,162,83,0.07); border: 1px solid rgba(201,162,83,0.35); border-radius: 18px; padding: 32px; position: relative; overflow: hidden; }
+    .style-card-active::before { content: 'AVAILABLE NOW'; position: absolute; top: 14px; right: 16px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.12em; color: var(--gold); background: rgba(201,162,83,0.12); padding: 3px 8px; border-radius: 4px; }
+    .style-num { font-size: 0.7rem; font-weight: 700; color: rgba(201,162,83,0.4); letter-spacing: 0.12em; margin-bottom: 8px; }
+    .style-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: #f0ede8; margin-bottom: 10px; }
+    .style-desc { font-size: 0.85rem; color: #8a8070; line-height: 1.6; }
+    .styles-pro-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .styles-pro-header h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: #4a4030; }
+    .pro-badge { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; color: #4a4030; background: rgba(201,162,83,0.06); border: 1px solid rgba(201,162,83,0.12); padding: 3px 10px; border-radius: 4px; white-space: nowrap; }
+    .styles-pro-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 10px; }
+    .style-pro-item { background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+    .style-pro-item .snum { font-size: 0.7rem; color: #2e2820; font-weight: 600; min-width: 18px; }
+    .style-pro-item .sname { font-size: 0.82rem; color: #3a3028; }
+
+    /* ── How To ── */
+    #howto { padding: 100px 28px; background: #080808; border-top: 1px solid var(--gold-dim); }
+    .howto-steps { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 0; align-items: start; margin-bottom: 64px; }
+    .howto-arrow { display: flex; align-items: center; justify-content: center; padding-top: 80px; }
+    .howto-step { }
+    .step-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; color: var(--gold); text-transform: uppercase; margin-bottom: 12px; }
+    .step-img { width: 100%; aspect-ratio: 1/1; object-fit: contain; border: 1px solid var(--gold-dim); border-radius: 14px; background: #fff; }
+    .step-cap { font-size: 0.82rem; color: #5a5040; margin-top: 12px; line-height: 1.5; }
+    .prompt-block { margin-top: 0; }
+    .prompt-toggle { width: 100%; background: rgba(201,162,83,0.05); border: 1px solid var(--gold-dim); border-radius: 12px; padding: 0; cursor: pointer; list-style: none; overflow: hidden; }
+    .prompt-toggle summary { padding: 14px 20px; font-size: 0.82rem; color: var(--gold); font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+    .prompt-toggle summary::-webkit-details-marker { display: none; }
+    .prompt-pre { margin: 0; padding: 20px; font-family: 'Inter', monospace; font-size: 0.72rem; color: #6a6050; line-height: 1.65; white-space: pre-wrap; word-break: break-word; max-height: 320px; overflow-y: auto; border-top: 1px solid var(--gold-dim); background: rgba(0,0,0,0.3); }
+
+    /* ── App section ── */
+    #app { padding: 100px 0 80px; background: #050505; border-top: 1px solid var(--gold-dim); }
+    .app-inner { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+    /* ── React app overrides ── */
+    .drop-zone.over { border-color: var(--gold) !important; background: rgba(201,162,83,0.06) !important; }
+    .spinner { animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.35s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    input[type=range] { accent-color: var(--gold); height: 4px; cursor: pointer; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #2a2520; border-radius: 3px; }
+    textarea:focus, input:focus, select:focus { outline: none; }
+
+    /* ── Footer ── */
+    footer { border-top: 1px solid var(--gold-dim); padding: 28px; text-align: center; background: #080808; font-size: 0.82rem; color: #3a3028; }
+    footer a { color: #5a4820; text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--gold); }
+
+    .eval-metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1rem; }
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-right { min-height: 280px; }
+      .hero-left { padding: 56px 28px; }
+      .problem-grid, .users-grid { grid-template-columns: 1fr; }
+      .styles-active { grid-template-columns: 1fr; }
+      .howto-steps { grid-template-columns: 1fr; }
+      .howto-arrow { display: none; }
+      .nav-links .nav-link { display: none; }
+      .eval-metrics-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ NAV ════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">Hom<span>AI</span>ker</a>
+    <div class="nav-links">
+      <a href="#problem" class="nav-link">Problem</a>
+      <a href="#users"   class="nav-link">Who It's For</a>
+      <a href="#product" class="nav-link">Product</a>
+      <a href="#howto"   class="nav-link">How To</a>
+      <a href="#app"     class="nav-cta">Try Now</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════ HERO ════════════════ -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-tag">AI Master Class · Capstone Project</p>
+    <h1 class="hero-title">Hom<span>AI</span>ker</h1>
+    <p class="hero-sub1">
+      Interior Design <em>CoPilot</em> for<br/>
+      Professionals and DIY enthusiasts
+    </p>
+    <p class="hero-sub2">Transforming floor plans into photorealistic designs in minutes</p>
+    <a href="#app" class="hero-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2m0 2v2m0-2h-2m2 0h2M3 14l9-9 9 9M5 21l4-4m6 4-4-4"/></svg>
+      Generate My Interior
+    </a>
+    <div class="hero-byline">
+      <p>By AI Master Class <u>Capstone</u> Project</p>
+      <strong><u>Ankit</u> &amp; Christof Hammel</strong>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div style="position:absolute;bottom:32px;right:32px;z-index:2;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);border:1px solid rgba(201,162,83,0.25);border-radius:12px;padding:10px 16px">
+      <p style="font-size:0.7rem;color:rgba(201,162,83,0.6);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px">Generated by</p>
+      <p style="font-family:'Playfair Display',serif;font-size:0.95rem;color:#C9A253">HomAIker · FLUX.2 LoRA</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ PROBLEM ════════════════ -->
+<section id="problem">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">The Problem</h2>
+      <p class="section-sub">Interior designers face critical barriers to client conversion</p>
+      <div class="gold-rule"></div>
+    </div>
+    <div class="problem-grid">
+      <div class="card">
+        <h3>Time consuming process</h3>
+        <p>Manual sketches and mood boards take days or weeks per client project, blocking the designer from serving more clients simultaneously.</p>
+        <div class="card-impact">Limits client capacity and reduces profitability — a bottleneck for scaling the business</div>
+      </div>
+      <div class="card">
+        <h3>Client Communication Gap</h3>
+        <p>Clients struggle to envision final results from raw floor plans and material samples alone, making it hard to commit to a direction.</p>
+        <div class="card-impact">Leads to hesitation, costly revisions, and lost opportunities</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ TARGET USERS ════════════════ -->
+<section id="users">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">Target Users</h2>
+      <p class="section-sub">Four high-value market segments</p>
+      <div class="gold-rule"></div>
+    </div>
+    <div class="users-grid">
+
+      <div class="user-card">
+        <div class="user-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C9A253" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
+        <h3>Interior Designers</h3>
+        <p class="subtitle">Freelance &amp; Agency-Based</p>
+        <p>Rapid visualization to win client pitches and speed up design iteration cycles.</p>
+        <div class="stat">130,000+ professionals in US alone</div>
+      </div>
+
+      <div class="user-card">
+        <div class="user-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C9A253" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <h3>Real Estate Agents</h3>
+        <p class="subtitle">Residential &amp; Commercial</p>
+        <p>Virtual staging to showcase property potential and accelerate sales cycles.</p>
+        <div class="stat">3M+ licensed agents in US</div>
+      </div>
+
+      <div class="user-card">
+        <div class="user-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C9A253" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>
+          </svg>
+        </div>
+        <h3>Architects</h3>
+        <p class="subtitle">Residential &amp; Small Commercial</p>
+        <p>Client-friendly design exploration demonstrating spatial possibilities beyond technical drawings.</p>
+        <div class="stat">115,000+ licensed architects in US</div>
+      </div>
+
+      <div class="user-card">
+        <div class="user-icon">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#C9A253" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <h3>Homeowners</h3>
+        <p class="subtitle">Renovation &amp; Remodeling</p>
+        <p>Visualize renovation outcomes before committing to expensive projects.</p>
+        <div class="stat">$450B annual home improvement market</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ PRODUCT ════════════════ -->
+<section id="product">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">Product</h2>
+      <p class="section-sub">Current model capabilities &amp; the roadmap ahead</p>
+      <div class="gold-rule"></div>
+    </div>
+
+    <!-- 3 active styles -->
+    <div class="styles-active">
+      <div class="style-card-active">
+        <p class="style-num">STYLE 01</p>
+        <h3 class="style-name">Bohemian (Boho)</h3>
+        <p class="style-desc">Ivory base with colorful textile accents — mustard, teal, rust. Rattan, cane, woven jute, linen and cotton with patterned rugs, handmade ceramics and natural stone.</p>
+      </div>
+      <div class="style-card-active">
+        <p class="style-num">STYLE 02</p>
+        <h3 class="style-name">Modern Farmhouse</h3>
+        <p class="style-desc">Warm neutrals and shiplap whites. Reclaimed wood, galvanized metal accents, linen textiles and vintage-inspired fixtures that blend rustic comfort with clean lines.</p>
+      </div>
+      <div class="style-card-active">
+        <p class="style-num">STYLE 03</p>
+        <h3 class="style-name">Traditional</h3>
+        <p class="style-desc">Rich wood tones, symmetrical arrangements and classic architectural details. Silk and velvet upholstery, oriental rugs, brass hardware and timeless formal elegance.</p>
+      </div>
+    </div>
+
+    <!-- Roadmap -->
+    <div>
+      <div class="styles-pro-header">
+        <h3>HomAIker Pro Roadmap — 22 additional styles</h3>
+        <span class="pro-badge">COMING SOON</span>
+      </div>
+      <div class="styles-pro-grid">
+        <div class="style-pro-item"><span class="snum">04</span><span class="sname">French Country</span></div>
+        <div class="style-pro-item"><span class="snum">05</span><span class="sname">Hollywood Glam</span></div>
+        <div class="style-pro-item"><span class="snum">06</span><span class="sname">Coastal</span></div>
+        <div class="style-pro-item"><span class="snum">07</span><span class="sname">Art Deco</span></div>
+        <div class="style-pro-item"><span class="snum">08</span><span class="sname">Southwestern</span></div>
+        <div class="style-pro-item"><span class="snum">09</span><span class="sname">Japandi</span></div>
+        <div class="style-pro-item"><span class="snum">10</span><span class="sname">Rustic</span></div>
+        <div class="style-pro-item"><span class="snum">11</span><span class="sname">Shabby Chic</span></div>
+        <div class="style-pro-item"><span class="snum">12</span><span class="sname">Eclectic</span></div>
+        <div class="style-pro-item"><span class="snum">13</span><span class="sname">Contemporary</span></div>
+        <div class="style-pro-item"><span class="snum">14</span><span class="sname">Asian Zen</span></div>
+        <div class="style-pro-item"><span class="snum">15</span><span class="sname">Mediterranean</span></div>
+        <div class="style-pro-item"><span class="snum">16</span><span class="sname">Maximalist</span></div>
+        <div class="style-pro-item"><span class="snum">17</span><span class="sname">Bauhaus</span></div>
+        <div class="style-pro-item"><span class="snum">18</span><span class="sname">Tropical</span></div>
+        <div class="style-pro-item"><span class="snum">19</span><span class="sname">Industrial</span></div>
+        <div class="style-pro-item"><span class="snum">20</span><span class="sname">Mid-Century</span></div>
+        <div class="style-pro-item"><span class="snum">21</span><span class="sname">Scandinavian</span></div>
+        <div class="style-pro-item"><span class="snum">22</span><span class="sname">Victorian</span></div>
+        <div class="style-pro-item"><span class="snum">23</span><span class="sname">Retro</span></div>
+        <div class="style-pro-item"><span class="snum">24</span><span class="sname">Urban</span></div>
+        <div class="style-pro-item"><span class="snum">25</span><span class="sname">High-Tech</span></div>
+      </div>
+    </div>
+
+    <!-- Evaluation Metrics -->
+    <div id="eval-metrics" class="mt-16" style="display:none">
+      <div class="styles-pro-header" style="margin-bottom:20px">
+        <h3 class="section-sub" style="font-size:1rem;color:#8a8070;margin:0">Model Evaluation Metrics</h3>
+        <span class="section-sub" style="font-size:0.9rem;color:#6a6050">HomAIker vs Flux2 — shows clear improvement</span>
+      </div>
+      <div class="eval-metrics-grid">
+        <div class="card">
+          <h3 style="color:#C9A253;font-size:0.85rem;letter-spacing:0.1em">LPIPS</h3>
+          <p class="text-sm text-gray-400 mb-2"><span id="m-lpips-lora" class="font-mono font-semibold" style="color:#C9A253">—</span> vs <span id="m-lpips-base" class="font-mono">—</span></p>
+          <div class="card-impact" id="m-lpips-imp">—</div>
+        </div>
+        <div class="card">
+          <h3 style="color:#C9A253;font-size:0.85rem;letter-spacing:0.1em">SSIM</h3>
+          <p class="text-sm text-gray-400 mb-2"><span id="m-ssim-lora" class="font-mono font-semibold" style="color:#C9A253">—</span> vs <span id="m-ssim-base" class="font-mono">—</span></p>
+          <div class="card-impact" id="m-ssim-imp">—</div>
+        </div>
+        <div class="card">
+          <h3 style="color:#C9A253;font-size:0.85rem;letter-spacing:0.1em">MSE</h3>
+          <p class="text-sm text-gray-400 mb-2"><span id="m-mse-lora" class="font-mono font-semibold" style="color:#C9A253">—</span> vs <span id="m-mse-base" class="font-mono">—</span></p>
+          <div class="card-impact" id="m-mse-imp">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ HOW TO ════════════════ -->
+<section id="howto">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-sub">From empty floor plan to furnished interior — driven by a single structured prompt</p>
+      <div class="gold-rule"></div>
+    </div>
+
+    <div class="howto-steps">
+      <!-- Input -->
+      <div class="howto-step">
+        <p class="step-label">Step 1 · Input Floor Plan</p>
+        <img src="/static/D01_R05_0088_start.png" alt="Empty floor plan" class="step-img" />
+        <p class="step-cap">Upload any 2D architectural floor plan — even with text labels. The model preserves all walls, doors, windows and room shapes exactly.</p>
+      </div>
+      <!-- Arrow -->
+      <div class="howto-arrow">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C9A253" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+      <!-- Output -->
+      <div class="howto-step">
+        <p class="step-label">Step 3 · Generated Interior</p>
+        <img src="/static/D01_R05_0088_end.png" alt="Furnished floor plan" class="step-img" />
+        <p class="step-cap">HomAIker adds furniture, removes text labels and applies the selected interior style — completely clean, top-down architectural output.</p>
+      </div>
+    </div>
+
+    <!-- Prompt -->
+    <div class="prompt-block">
+      <p class="step-label" style="margin-bottom:16px">Step 2 · The Prompt</p>
+      <details class="prompt-toggle">
+        <summary>View example prompt used for this generation <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><path d="m6 9 6 6 6-6"/></svg></summary>
+        <pre class="prompt-pre">TASK
+Take this floor plan and add furniture to it. REMOVE all text labels that appear in the input image (like room names). Keep the walls, doors, and room shapes exactly the same, but OUTPUT should have NO TEXT AT ALL - completely clean with only walls and furniture.
+
+INPUT INSTRUCTIONS
+Keep: walls, doors, windows, room shapes, layout
+Remove: ALL text labels, room names, letters - the output must be text-free
+Input image role: empty_floorplan_to_furnish
+Number of outputs: 1
+
+CRITICAL RULES
+- DO NOT change the floor plan layout or room positions
+- DO NOT add any new text labels - only keep labels that exist in the input image
+- DO NOT add descriptive text like furniture names or descriptions
+- KEEP the exact same walls, doors, windows, and room shapes
+- ONLY add furniture inside existing rooms
+
+GLOBAL CONSTRAINTS
+- do not change architecture: True
+- keep walls doors windows fixed: True
+- keep room count exact: 5
+- do not add or remove rooms: True
+- do not add new text labels: True
+- keep scale realistic: True
+- no furniture overlap: True
+
+DESIGN BRIEF
+- household: single parent
+- persona lifestyle: plant lover
+- hobby tags: yoga, music
+- personality social: balanced
+- routine: cooking daily
+- needs must implement: natural light, easy cleaning
+- desires implement if feasible: cozy, warm
+- budget level: mid
+- storage intensity: low
+
+STYLE PACK
+- style id: 1
+- interior style: Bohemian (Boho)
+- palette description: ivory base with colorful textile accents (mustard, teal, rust)
+- materials description: rattan, cane, and woven jute, linen and cotton textiles with patterned rugs, handmade ceramics and natural stone accents
+
+OUTPUT
+Name: 2D_topview_plan
+Camera: strictly_top_down_orthographic
+Render mode: flat_2D_architectural_diagram
+
+NEGATIVE PROMPT
+text, labels, letters, words, room names, front view furniture, 3D objects, shadows, perspective, isometric, grid, collage, multiple views
+
+========================================
+CONFIGURATION
+========================================
+Variation Id: D01_R05_0088 · Style Id: 1 · Interior Style: Bohemian (Boho)
+Rooms: 5 · Household: single parent · Lifestyle: plant lover
+Palette: ivory base with colorful textile accents (mustard, teal, rust)
+Materials: rattan, cane, woven jute, linen and cotton with patterned rugs</pre>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ APP TOOL ════════════════ -->
+<section id="app">
+  <div class="app-inner">
+    <div class="section-header" style="margin-bottom:48px">
+      <h2 class="section-title">Try HomAIker</h2>
+      <p class="section-sub">Upload a floor plan, describe your style — get a design in under 2 minutes</p>
+      <div class="gold-rule"></div>
+    </div>
+    <div id="root"></div>
+  </div>
+</section>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer>
+  HomAIker &nbsp;·&nbsp; FLUX.2 LoRA inference via <a href="https://fal.ai" target="_blank" rel="noreferrer">fal.ai</a>
+  &nbsp;·&nbsp; AI Master Class Capstone &nbsp;·&nbsp; Ankit &amp; Christof Hammel
+</footer>
+
+<script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /* ── Inline SVG icons ─────────────────────────────── */
+    const Ico = ({ d, size = 18, cls = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        className={cls}>
+        {Array.isArray(d) ? d.map((p, i) => <path key={i} d={p} />) : <path d={d} />}
+      </svg>
+    );
+
+    const I = {
+      wand:   "M15 4V2m0 2v2m0-2h-2m2 0h2M3 14l9-9 9 9M5 21l4-4m6 4-4-4",
+      upload: ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4","M17 8l-5-5-5 5","M12 3v12"],
+      img:    ["M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z","M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z","M21 15l-5-5L5 21"],
+      link:   "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
+      chevD:  "m6 9 6 6 6-6",
+      chevU:  "m18 15-6-6-6 6",
+      x:      "M18 6 6 18M6 6l12 12",
+      dl:     ["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4","M7 10l5 5 5-5","M12 15V3"],
+      spin:   "M21 12a9 9 0 1 1-6.219-8.56",
+      check:  "M20 6 9 17l-5-5",
+      trash:  ["M3 6h18","M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6","M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"],
+    };
+
+    /* ── Slider ───────────────────────────────────────── */
+    function Slider({ label, hint, value, min, max, step, onChange, fmt }) {
+      const display = fmt ? fmt(value) : value;
+      return (
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-gray-400">{label}{hint && <span className="text-gray-600 ml-1">{hint}</span>}</span>
+            <span className="text-xs font-semibold tabular-nums w-12 text-right" style={{color:"#C9A253"}}>{display}</span>
+          </div>
+          <input type="range" min={min} max={max} step={step} value={value}
+            onChange={e => onChange(Number(e.target.value))} className="w-full rounded-full" />
+        </div>
+      );
+    }
+
+    /* ── DropZone ─────────────────────────────────────── */
+    function DropZone({ preview, onFile, onClear }) {
+      const [over, setOver] = useState(false);
+      const inputRef = useRef();
+      const handleDrop = useCallback(e => {
+        e.preventDefault(); setOver(false);
+        const f = e.dataTransfer.files[0];
+        if (f && f.type.startsWith("image/")) onFile(f);
+      }, [onFile]);
+      return (
+        <div
+          className={`drop-zone border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200 relative overflow-hidden
+            ${over ? "over" : "border-gray-700 hover:border-gray-600"}`}
+          style={{ minHeight: 200 }}
+          onClick={() => !preview && inputRef.current.click()}
+          onDragOver={e => { e.preventDefault(); setOver(true); }}
+          onDragLeave={() => setOver(false)}
+          onDrop={handleDrop}>
+          <input ref={inputRef} type="file" accept="image/*" className="hidden"
+            onChange={e => { const f = e.target.files[0]; if (f) onFile(f); e.target.value = ""; }} />
+          {preview ? (
+            <>
+              <img src={preview} alt="Input preview" className="w-full object-contain max-h-72 p-1.5" />
+              <button onClick={e => { e.stopPropagation(); onClear(); }}
+                className="absolute top-2 right-2 bg-gray-900/80 hover:bg-red-900/60 text-gray-400 hover:text-red-300
+                  rounded-lg p-1.5 transition border border-gray-700 hover:border-red-700">
+                <Ico d={I.trash} size={14} />
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 py-14 px-4 text-gray-600">
+              <div className="w-14 h-14 rounded-2xl bg-gray-800/60 border border-gray-700 flex items-center justify-center">
+                <Ico d={I.upload} size={24} cls="text-gray-500" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-400">Drop floor plan image here</p>
+                <p className="text-xs text-gray-600 mt-1">or click to browse · PNG, JPEG, WEBP</p>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ── ResultPanel ──────────────────────────────────── */
+    function ResultPanel({ loading, result }) {
+      return (
+        <div className={`border-2 rounded-2xl overflow-hidden transition-all duration-300 min-h-64 flex flex-col
+          ${result ? "border-gray-700 bg-gray-900/60" : "border-dashed border-gray-800 bg-gray-900/20"}`}>
+          {loading && (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 py-16">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center"
+                style={{background:"rgba(201,162,83,0.08)",border:"1px solid rgba(201,162,83,0.25)"}}>
+                <Ico d={I.spin} size={28} cls="spinner" style={{color:"#C9A253"}} />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-300">Generating with FLUX.2 LoRA…</p>
+                <p className="text-xs text-gray-600 mt-1">This takes 30–90 seconds on fal.ai</p>
+              </div>
+            </div>
+          )}
+          {!loading && !result && (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-gray-700">
+              <div className="w-16 h-16 rounded-2xl bg-gray-800/40 border border-gray-800 flex items-center justify-center">
+                <Ico d={I.img} size={28} cls="text-gray-700" />
+              </div>
+              <p className="text-sm text-gray-600">Generated image will appear here</p>
+            </div>
+          )}
+          {!loading && result && (
+            <div className="fade-in flex-1 flex flex-col">
+              <img src={result.url} alt="Generated interior" className="w-full object-contain flex-1" />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ── App ──────────────────────────────────────────── */
+    function App() {
+      const [imageFile,    setImageFile]    = useState(null);
+      const [imagePreview, setImagePreview] = useState(null);
+      const [prompt,       setPrompt]       = useState("");
+      const [loraUrl,      setLoraUrl]      = useState("");
+      const [loraScale,    setLoraScale]    = useState(1.0);
+      const [steps,        setSteps]        = useState(28);
+      const [guidance,     setGuidance]     = useState(2.5);
+      const [seed,         setSeed]         = useState("");
+      const [acceleration, setAcceleration] = useState("regular");
+      const [promptExp,    setPromptExp]    = useState(false);
+      const [showAdv,      setShowAdv]      = useState(false);
+      const [loading,      setLoading]      = useState(false);
+      const [result,       setResult]       = useState(null);
+      const [error,        setError]        = useState(null);
+      const [success,      setSuccess]      = useState(false);
+
+      useEffect(() => {
+        fetch("/api/config")
+          .then(r => r.json())
+          .then(cfg => {
+            if (cfg.default_lora_url) setLoraUrl(cfg.default_lora_url);
+            if (cfg.default_prompt)   setPrompt(cfg.default_prompt);
+          })
+          .catch(() => {});
+      }, []);
+
+      const handleFile = useCallback(file => {
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onload = e => setImagePreview(e.target.result);
+        reader.readAsDataURL(file);
+        setResult(null); setError(null);
+      }, []);
+
+      const handleClear = useCallback(() => {
+        setImageFile(null); setImagePreview(null); setResult(null); setError(null);
+      }, []);
+
+      const handleGenerate = async () => {
+        if (!imageFile)      { setError("Please upload an input image."); return; }
+        if (!prompt.trim())  { setError("Please enter a prompt.");        return; }
+        if (!loraUrl.trim()) { setError("Please enter your LoRA URL.");   return; }
+        setError(null); setSuccess(false); setLoading(true); setResult(null);
+        try {
+          const fd = new FormData();
+          fd.append("image",                  imageFile);
+          fd.append("prompt",                 prompt);
+          fd.append("lora_url",               loraUrl);
+          fd.append("lora_scale",             loraScale);
+          fd.append("num_inference_steps",    steps);
+          fd.append("guidance_scale",         guidance);
+          fd.append("seed",                   seed);
+          fd.append("acceleration",           acceleration);
+          fd.append("enable_prompt_expansion",promptExp);
+          const resp = await fetch("/api/generate", { method: "POST", body: fd });
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.detail || `Server error ${resp.status}`);
+          setResult(data.images[0]); setSuccess(true);
+        } catch (e) {
+          setError(e.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const canGenerate = !loading && !!imageFile && !!prompt.trim() && !!loraUrl.trim();
+      const goldBtn = "linear-gradient(135deg,#9A7832,#C9A253)";
+
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+          {/* ── Left: Inputs ── */}
+          <div className="space-y-5">
+
+            <section>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">
+                Input Floor Plan
+              </label>
+              <DropZone preview={imagePreview} onFile={handleFile} onClear={handleClear} />
+              {imageFile && <p className="mt-1.5 text-xs text-gray-600 truncate pl-1">{imageFile.name}</p>}
+            </section>
+
+            <section>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">
+                Prompt
+              </label>
+              <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={3}
+                placeholder="e.g. Furnish this floor plan with modern Scandinavian style, warm lighting"
+                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100
+                  placeholder-gray-700 resize-none transition-colors"
+                style={{focusBorderColor:"#C9A253"}} />
+            </section>
+
+            <section>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2.5">
+                LoRA Weights URL
+              </label>
+              <div className="relative">
+                <Ico d={I.link} size={15} cls="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
+                <input type="url" value={loraUrl} onChange={e => setLoraUrl(e.target.value)}
+                  placeholder="https://fal.run/files/..."
+                  className="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-3 text-sm text-gray-100
+                    placeholder-gray-700 transition-colors" />
+              </div>
+              <p className="mt-1.5 text-xs text-gray-700 pl-1">
+                URL of your finetuned <code className="text-gray-600">diffusers_lora.safetensors</code> on fal.ai CDN
+              </p>
+            </section>
+
+            <section className="border border-gray-800 rounded-2xl overflow-hidden">
+              <button onClick={() => setShowAdv(v => !v)}
+                className="w-full flex items-center justify-between px-4 py-3.5 text-sm text-gray-400
+                  hover:text-gray-200 hover:bg-gray-900/40 transition-colors">
+                <span className="font-medium">Advanced Settings</span>
+                <Ico d={showAdv ? I.chevU : I.chevD} size={16} />
+              </button>
+              {showAdv && (
+                <div className="px-5 pb-5 pt-3 border-t border-gray-800 bg-gray-900/20 space-y-5">
+                  <Slider label="LoRA Scale" value={loraScale} min={0} max={2} step={0.05}
+                    onChange={setLoraScale} fmt={v => v.toFixed(2)} />
+                  <Slider label="Inference Steps" value={steps} min={8} max={50} step={1} onChange={setSteps} />
+                  <Slider label="Guidance Scale" value={guidance} min={1.0} max={10.0} step={0.1}
+                    onChange={setGuidance} fmt={v => v.toFixed(1)} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-400">Seed <span className="text-gray-600">(empty = random)</span></label>
+                      <input type="number" value={seed} onChange={e => setSeed(e.target.value)} placeholder="Random"
+                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder-gray-700" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-gray-400">Acceleration</label>
+                      <select value={acceleration} onChange={e => setAcceleration(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 cursor-pointer">
+                        <option value="none">None</option>
+                        <option value="regular">Regular</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <div onClick={() => setPromptExp(v => !v)}
+                      className="w-9 h-5 rounded-full flex items-center px-0.5 transition-colors"
+                      style={{background: promptExp ? "#C9A253" : "#374151"}}>
+                      <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${promptExp ? "translate-x-4" : "translate-x-0"}`} />
+                    </div>
+                    <span className="text-xs text-gray-400">Enable Prompt Expansion</span>
+                  </label>
+                </div>
+              )}
+            </section>
+
+            {error && (
+              <div className="flex items-start gap-2.5 bg-red-950/40 border border-red-800/50 rounded-xl px-4 py-3 text-sm text-red-300 fade-in">
+                <Ico d={I.x} size={16} cls="shrink-0 mt-0.5" /><span>{error}</span>
+              </div>
+            )}
+
+            <button onClick={handleGenerate} disabled={!canGenerate}
+              className="w-full py-4 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2.5 transition-all duration-200 shadow-lg"
+              style={canGenerate
+                ? {background: goldBtn, color:"#080808", boxShadow:"0 8px 32px rgba(201,162,83,0.25)"}
+                : {background:"#1f1f1f", color:"#4a4a4a", cursor:"not-allowed"}}>
+              {loading ? (
+                <><Ico d={I.spin} size={18} cls="spinner" /><span>Generating…</span></>
+              ) : success ? (
+                <><Ico d={I.check} size={18} /><span>Generate Again</span></>
+              ) : (
+                <><Ico d={I.wand} size={18} /><span>Generate Interior</span></>
+              )}
+            </button>
+          </div>
+
+          {/* ── Right: Output ── */}
+          <div className="lg:sticky lg:top-24 space-y-4">
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Generated Output
+            </label>
+            <ResultPanel loading={loading} result={result} />
+            {result && (
+              <div className="fade-in flex items-center justify-between px-1">
+                <span className="text-xs text-gray-600">
+                  {result.width && result.height ? `${result.width} × ${result.height} px` : "Image ready"}
+                </span>
+                <a href={result.url} download="generated_interior.png" target="_blank" rel="noreferrer"
+                  className="flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-xl transition-all border"
+                  style={{color:"#C9A253",background:"rgba(201,162,83,0.08)",borderColor:"rgba(201,162,83,0.25)"}}>
+                  <Ico d={I.dl} size={14} />
+                  Download
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+<script>
+(function(){
+  fetch("/api/metrics").then(function(r){return r.json();}).then(function(m){
+    if(!m || !m.n_samples || m.n_samples<=0) return;
+    var el=document.getElementById("eval-metrics");if(!el) return;
+    el.style.display="block";
+    function fmt4(v){return v!=null?Number(v).toFixed(4):"—";}
+    function fmt1(v){var n=Number(v);return (n>=0?"+":"")+(n.toFixed(1))+"%";}
+    document.getElementById("m-lpips-lora").textContent=fmt4(m.lora&&m.lora.lpips);
+    document.getElementById("m-lpips-base").textContent=fmt4(m.base&&m.base.lpips);
+    document.getElementById("m-lpips-imp").textContent=fmt1(m.improvement_pct&&m.improvement_pct.lpips)+" improvement (lower = better)";
+    document.getElementById("m-ssim-lora").textContent=fmt4(m.lora&&m.lora.ssim);
+    document.getElementById("m-ssim-base").textContent=fmt4(m.base&&m.base.ssim);
+    document.getElementById("m-ssim-imp").textContent=fmt1(m.improvement_pct&&m.improvement_pct.ssim)+" improvement (higher = better)";
+    document.getElementById("m-mse-lora").textContent=fmt4(m.lora&&m.lora.mse);
+    document.getElementById("m-mse-base").textContent=fmt4(m.base&&m.base.mse);
+    document.getElementById("m-mse-imp").textContent=fmt1(m.improvement_pct&&m.improvement_pct.mse)+" improvement (lower = better)";
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>

@@ -205,3 +205,36 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Dataset files (too large for git - use cloud storage or Git LFS)
+dataset_generation/high_quality_architectural/
+dataset_generation/generated_interiors/
+
+# Data folder (keep structure but ignore actual data)
+dataset_generation/Data/*
+!dataset_generation/Data/README.md
+!dataset_generation/Data/.gitkeep
+
+# Finetuning: downloaded LoRA run artifacts and training data zips
+finetuning/runs/
+finetuning/data/
+finetuning/artifacts/
+
+# Inference: generated output images
+inference/outputs/
+inference/data
+inference/vali_1
+inference/vali_1_base
+inference/vali_1_lora
+inference/vali_2
+inference/vali_2_base
+inference/vali_2_lora
+inference/vali_3
+inference/vali_3_base
+inference/vali_3_lora
+inference/test_inf
+inference/test_inf_base
+inference/test_inf_lora
+
+
+

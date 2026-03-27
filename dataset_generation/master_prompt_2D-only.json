@@ -1,0 +1,25 @@
+{
+  "task": "Take this floor plan and add furniture to it. REMOVE all text labels that appear in the input image (like room names). Keep the walls, doors, and room shapes exactly the same, but OUTPUT should have NO TEXT AT ALL - completely clean with only walls and furniture.",
+  "input_instructions": {
+    "keep": "walls, doors, windows, room shapes, layout",
+    "remove": "ALL text labels, room names, letters - the output must be text-free"
+  },
+  "style": {
+    "interior_style": "{{interior_style}}",
+    "palette": "{{palette}}",
+    "materials": "{{materials}}"
+  },
+  "furniture_rules": {
+    "view": "Show all furniture from directly above (bird's eye view)",
+    "plants": "small solid circles only - no leaves",
+    "shelves": "rectangles from above - no visible books",
+    "all_items": "simple geometric shapes seen from above"
+  },
+  "OUTPUT_MUST_BE": [
+    "Text-free - NO letters, NO words, NO labels anywhere",
+    "Remove all room name labels like KH, ET, ULKOTILA, etc.",
+    "Only show: walls, doors, windows, and furniture",
+    "Use warm colors matching {{palette}}"
+  ],
+  "negative_prompt": "text, labels, letters, words, room names, KH, ET, VH, TK, ULKOTILA, TUPAKEITTIO, ALKOVI, front view furniture, book spines, plant leaves"
+}

@@ -1,0 +1,9 @@
+# Web server
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+python-dotenv>=1.0.0
+
+# Inference / fal.ai client
+fal-client>=0.13.1
+requests>=2.31.0
